@@ -26,7 +26,7 @@ author:
 # --- Google Search Console --------------------------------------------------
 # Add this site as a property in Search Console, then paste its HTML-tag token
 # here. _includes/head_custom.html renders it on the entry page only.
-# google_site_verification_token: "<token>"   # empty strings are truthy in Liquid - leave commented until you have one
+google_site_verification_token: "CF0JB6gTuZasg4wyXF_iek5BZfho1Yhl3bic-5DPtOw"
 
 # jekyll-seo-tag is rendered by the theme's head; sitemap needs no include.
 plugins:
