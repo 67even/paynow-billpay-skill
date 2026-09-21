@@ -1,0 +1,67 @@
+# ---------------------------------------------------------------------------
+# Working artefacts — not part of the published skill
+# ---------------------------------------------------------------------------
+Claude outputs/
+Reviews/
+
+# Eval workspace: generated run outputs, gradings, benchmarks and review pages
+paynow-paybill-skills-workspace/
+*-workspace/
+*-eval-review*.html
+feedback.json
+
+# Packaged skill bundles — rebuild with the zip command in README.md, don't commit binaries
+*.skill
+*.zip
+
+# ---------------------------------------------------------------------------
+# Secrets — BillPay credentials and webhook secret keys must never reach version control
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!billpay.env.example
+*.key
+*.pem
+secrets.json
+
+# ---------------------------------------------------------------------------
+# Language / tooling noise
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.db
+
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+vendor/
+composer.lock
+.phpunit.result.cache
+
+bin/
+obj/
+
+# ---------------------------------------------------------------------------
+# Editors / OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------------------
+# Jekyll (local docs builds)
+# ---------------------------------------------------------------------------
+docs/_site/
+docs/.jekyll-cache/
+docs/.jekyll-metadata

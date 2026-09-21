@@ -1,0 +1,183 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Nothing in this workflow needs more than to read the checkout. A job that later
+# needs more should declare its own narrower `permissions:` block.
+permissions:
+  contents: read
+
+env:
+  SKILL: paynow-paybill-skills/paynow-billpay
+
+jobs:
+  php:
+    name: PHP ${{ matrix.php }} - lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Lint every PHP template and config file
+        run: |
+          for f in $SKILL/templates/php-laravel/*.php $SKILL/config/laravel/*.php; do php -l "$f"; done
+
+  laravel:
+    name: Laravel feature suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: sqlite3, pdo_sqlite
+          coverage: none
+          tools: composer
+      - name: Install the templates into a fresh Laravel app and run BillPayTest
+        run: bash tools/ci_laravel.sh /tmp/billpay-laravel
+
+  python:
+    name: Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: '3.9'
+            os: ubuntu-24.04
+          - python: '3.12'
+            os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Webhook signature self-test (Paynow's worked example)
+        run: python3 $SKILL/scripts/verify_webhook.py --self-test
+      - name: Scripts compile and the CLI starts
+        run: |
+          python3 -m py_compile $SKILL/scripts/*.py
+          python3 $SKILL/scripts/billpay_cli.py --help > /dev/null
+      - name: Template unit tests
+        working-directory: ${{ env.SKILL }}/templates/python
+        run: |
+          pip install requests flask
+          python3 -m py_compile billpay_client.py webhooks_flask.py
+          python3 -m unittest test_billpay_client.py -v
+
+  node:
+    name: Node ${{ matrix.node }} - strict TypeScript
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '20', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: tsc --strict against real express types
+        run: |
+          mkdir -p /tmp/tscheck && cp $SKILL/templates/node/*.ts /tmp/tscheck/
+          cd /tmp/tscheck
+          npm init -y > /dev/null
+          npm install --silent typescript@5 @types/node express @types/express
+          npx tsc --noEmit --strict --target es2022 --module nodenext \
+            --moduleResolution nodenext --esModuleInterop --skipLibCheck *.ts
+
+  dotnet:
+    name: .NET 8 build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build the C# templates inside a minimal-API project
+        run: |
+          dotnet new web -n BillPayCheck -o /tmp/cscheck --framework net8.0
+          cp $SKILL/templates/dotnet/*.cs /tmp/cscheck/
+          cat > /tmp/cscheck/Program.cs <<'CS'
+          using BillPay;
+          var builder = WebApplication.CreateBuilder(args);
+          builder.Services.AddHttpClient<BillPayClient>(c => BillPayClient.Configure(c, builder.Configuration));
+          var app = builder.Build();
+          app.MapBillPayWebhooks();
+          CS
+          cd /tmp/cscheck && dotnet build -warnaserror:nullable --nologo
+
+  seo:
+    name: Docs - rendered SEO and structured data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - name: Render the site the way GitHub Pages will
+        run: |
+          VERSION=$(sed -n 's/^remote_theme:.*@v\(.*\)$/\1/p' docs/_config.yml)
+          if [ -z "$VERSION" ]; then
+            echo "::error::could not read the theme version from docs/_config.yml"
+            exit 1
+          fi
+          echo "building against just-the-docs $VERSION"
+          gem install --no-document jekyll -v '~> 4.4'
+          gem install --no-document just-the-docs -v "$VERSION"
+          gem install --no-document jekyll-seo-tag jekyll-sitemap
+          printf 'remote_theme: null\ntheme: just-the-docs\nplugins:\n  - jekyll-seo-tag\n  - jekyll-sitemap\n' > /tmp/local-theme.yml
+          cd docs && jekyll build --config _config.yml,/tmp/local-theme.yml -d /tmp/site
+      - name: Every JSON-LD block must parse and carry its required properties
+        run: python3 tools/check_structured_data.py /tmp/site
+      - name: Every page must carry the tags that decide how it appears in search
+        run: python3 tools/check_meta_tags.py /tmp/site
+
+  links:
+    name: Docs - links and structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every internal link and anchor must resolve
+        run: python3 tools/check_links.py
+      - name: SKILL.md frontmatter must be valid and the name must match the folder
+        run: |
+          python3 - <<'PY'
+          import io, re
+          t = io.open("paynow-paybill-skills/paynow-billpay/SKILL.md", encoding="utf-8").read()
+          m = re.match(r"^---\n(.*?)\n---\n", t, re.S)
+          assert m, "SKILL.md has no closed frontmatter block"
+          fm = m.group(1)
+          assert re.search(r"^name:\s*paynow-billpay\s*$", fm, re.M), "name must be paynow-billpay"
+          d = re.search(r"^description:\s*(.*)$", fm, re.M)
+          assert d, "description is required"
+          assert len(d.group(1)) <= 1026, "description is over 1024 characters"
+          assert "<" not in d.group(1) and ">" not in d.group(1), "no angle brackets in description"
+          lines = t.count("\n")
+          assert lines < 500, "SKILL.md is %d lines; keep it under 500" % lines
+          print("frontmatter OK, %d lines" % lines)
+          PY
+      - name: The Jekyll site must be configured correctly
+        run: python3 tools/check_docs_site.py
+      - name: docs/ must be in sync with the reference sources
+        run: python3 tools/build_docs.py --check
+      - name: No credentials or secret keys may be committed
+        run: |
+          # Paynow publishes this secret key in its own legacy-hash worked example, so it is allowed.
+          if grep -rInE '(BILLPAY_(PASSWORD|SECRET_KEY|WEBHOOK_TOKEN)=[^[:space:]#.$<"][^[:space:]]*)|([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*(secret|password|token))' \
+               --exclude-dir=.git . \
+             | grep -vi '415b654f-3544-4281-a91e-051e710bfb8d'; then
+            echo "::error::something that looks like a BillPay credential was committed"
+            exit 1
+          fi
+          echo "no credentials found"

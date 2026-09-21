@@ -1,0 +1,48 @@
+// ---------------------------------------------------------------------------
+// 67even — derived entirely from the two colours in the logo.
+//
+//   red    #FF3131   the mark
+//   black  #0C0E0B   the logo plate (a slightly green-shifted black)
+//   white  #FFFFFF
+//
+// Every surface below is the logo black mixed toward white; every accent is the
+// logo red. Contrast was measured, not assumed:
+//
+//   #FF3131 on #0C0E0B ............ 5.29:1  AA        (so links use brand red)
+//   #FFFFFF on #FF3131 ............ 3.66:1  AA-large  (so red buttons use BLACK text)
+//   body text #ECECEB on bg ...... 16.40:1  AA
+//   muted     #A3A3A2 on bg ....... 7.68:1  AA
+// ---------------------------------------------------------------------------
+
+@import "./color_schemes/dark";
+
+$brand-red:    #ff3131;
+$brand-black:  #0c0e0b;
+$brand-white:  #ffffff;
+
+// Surfaces: the logo black lifted toward white in even steps.
+$surface-1:    #151614; //  3.5%  sidebar
+$surface-2:    #1b1c1a; //  6%    code, tables
+$surface-3:    #242522; // 10%    buttons
+$rule:         #333532; // 16%    borders
+$rule-strong:  #464846; // 24%
+
+$color-scheme: dark;
+
+$body-background-color:      $brand-black;
+$sidebar-color:              $surface-1;
+$search-background-color:    $surface-1;
+$table-background-color:     $surface-2;
+$code-background-color:      $surface-2;
+$base-button-color:          $surface-3;
+$feedback-color:             $surface-1;
+$border-color:               $rule;
+
+$body-heading-color:         $brand-white;
+$body-text-color:            #ececeb;
+$search-result-preview-color:#a3a3a2;
+$nav-child-link-color:       #a3a3a2;
+
+// Brand red carries links and the active nav state.
+$link-color:                 $brand-red;
+$btn-primary-color:          $brand-red;

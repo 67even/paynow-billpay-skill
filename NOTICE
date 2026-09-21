@@ -1,0 +1,12 @@
+Paynow BillPay Skill
+Copyright (c) 2026 John Mugabe
+
+This project documents the publicly published BillPay HTTP interface of Paynow
+Zimbabwe (https://developers.paynow.co.zw/docs/billpay/intro/) and the behaviour
+described there.
+
+It is an independent, community-maintained project. It is not affiliated with,
+endorsed by, or supported by Paynow Zimbabwe. "Paynow", "BillPay" and any related
+marks are the property of their respective owner.
+
+Licensed under the MIT License. See LICENSE.

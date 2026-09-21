@@ -1,0 +1,108 @@
+# Go-live checklist, integration checklist and pitfalls
+
+> Extracted from `full-reference.md` (verified against developers.paynow.co.zw, 21 Sep 2026). Walk through this before UAT or when reviewing an integration.
+
+## 15. Go Live (UAT)
+
+Joint user acceptance testing is **required** before moving from test to live. Paynow must conform to biller requirements and ensure vendors do the same.
+
+> **Note:** The vendor must **share their screen** while these tests are carried out.
+
+### 15.1 UAT checklist
+
+1. **Wallet balance** — the vendor can check and display their wallet balance in their backend.
+2. **Customer info on AUTH** — at minimum `MemberName`, and `MemberAddress` if present, are displayed on screen after AUTH.
+3. **Status inquiry intervals** — polling for `BeingProcessed` payments adheres to specification. Tested using the Test Biller with member numbers prefixed `PP`.
+4. **Receipt HTML** — every entry in `ReceiptHtml` (if present) is shared with the customer. If displayed on screen, the customer must be able to download/print **each individual entry**, not combined into one.
+5. **Receipt SMS** — every SMS in `ReceiptSmses` (if present) is sent to the customer's mobile, **each sent individually**, not combined.
+6. **Config webhook** — the vendor responds to biller configuration webhooks with:
+   - a `200 OK` response, **and**
+   - a follow-up call to `/api/payment/ListBillers?billerCodes=ABC,DEF,GHI` — **not** the unfiltered `/api/payment/ListBillers`
+7. **No polling of ListBillers** — the vendor calls it only as needed after a webhook, and stores biller configurations in the local application database.
+
+### 15.2 Recommended practices (not part of UAT)
+
+- **Track wallet balance** after each successful transaction (it's in the response) and notify operational staff when it falls below a predetermined amount. Avoid flooding staff with emails.
+- **Cap retries** for transactions stuck in `BeingProcessed`. After a set number of retries: notify operational staff, notify the customer that you're attending to the issue, and temporarily suspend status inquiries to reduce load.
+- **Have a fast refund path** for transactions that fail and cannot be retried.
+- **Implement the auto-push config webhook** so your product/price offering reconfigures automatically or staff are alerted. If your pricing falls out of sync with BillPay, API requests are likely to be rejected.
+
+---
+## Appendix D — Integration checklist
+
+### Phase 1 — Setup
+- [ ] Obtain API credentials from Paynow support (vendor: `API` role; biller: `Biller Admin`/`Biller User`)
+- [ ] Confirm ZWG and/or USD wallets are provisioned and prefunded
+- [ ] Store credentials in a secret manager — never in source control
+- [ ] Set HTTP client timeout to 60 seconds
+- [ ] Register your webhook URL (vendors: Paynow support; billers: system admin) and share your bearer token / receive your secret key
+
+### Phase 2 — Catalogue
+- [ ] Call `ListBillers` **once**, unfiltered, to seed your database
+- [ ] Persist billers and products locally
+- [ ] Honour `Enabled` on both biller and product before offering them
+- [ ] Render `MemberNumberFieldLabel` / `MemberNumberFieldDesc` on your input
+- [ ] Validate member numbers against `MemberNumberFieldRegex`
+- [ ] Enforce `MinAmount` / `MaxAmount`
+- [ ] Respect `AllowMultipleProductsPerPayment`
+- [ ] Collect `MetadataFields` where `Required` is true
+- [ ] Show `PrePurchaseInstructions` before payment and `PostPurchaseInstructions` after
+- [ ] Handle `AllowSpecifyQuantity` with `QuantityFieldLabel`
+
+### Phase 3 — Payment flow
+- [ ] Generate a unique `Reference` per transaction and persist it before calling the API
+- [ ] Call AUTH **before** debiting the customer
+- [ ] Display `MemberName` (and `MemberAddress` if present) for confirmation
+- [ ] Interpret `AuthAmountMandated` correctly (part vs full payment)
+- [ ] Set `RequiresForexPayment` on AUTH and PAY
+- [ ] Blank `TotalAmount`/`Price` in PAY when AUTH returned the balance owing
+- [ ] Send PAY with a body otherwise identical to AUTH
+- [ ] Never re-send PAY after a timeout, connection error or 5xx — use STATUS
+- [ ] Implement 120s/180s polling for `BeingProcessed`/`BeingPaid`/`Pending`, and 600s for `Flagged`
+- [ ] Cap retries and escalate stuck transactions to operations staff
+
+### Phase 4 — Fulfilment
+- [ ] Send **each** `ReceiptSmses` entry as a separate SMS
+- [ ] Display/print **each** `ReceiptHtml` entry separately and make each downloadable
+- [ ] Render `DisplayData` on the confirmation page/email
+- [ ] Surface vouchers (`VoucherCode`, `SerialNumber`, `ExpiryDate`, `ValidDays`)
+- [ ] Record `WalletBalanceAfterDebit` and alert staff on low balance
+- [ ] For `VendorMustInvoicePayments` billers, run a follow-up STATUS to collect `VendorInvoiceReference`, `VendorFiscalSignature` (QR code) and `VendorFiscalMetadata`
+- [ ] Refund the customer promptly on `Failed`
+
+### Phase 5 — Webhooks
+- [ ] Validate the bearer token (vendor, once agreed with BillPay) or `X-Signature` HMAC (biller)
+- [ ] Return `200 OK` promptly to the config webhook — otherwise BillPay retries every 30s, up to 3 times
+- [ ] On config webhook, call `ListBillers?billerCodes=...` **filtered only**
+- [ ] *(Recommendation)* Treat `PaymentId` as an idempotency key on biller webhooks
+
+### Phase 6 — Go live
+- [ ] Exercise every Test Biller prefix: `AT`, `AF`, `PT`, `PF`, `PP`, `PFF`, `USD`
+- [ ] Exercise every test product: `AI`, `AM`, `AA`, `RV`, `FP`
+- [ ] Test ZETDC multi-token receipts and the special meter numbers
+- [ ] Complete the 7 UAT items in §15.1 with screen sharing
+
+---
+
+## Appendix E — Common pitfalls
+
+| Pitfall | Consequence | Fix |
+|---|---|---|
+| Treating HTTP 200 as success | Customers charged for failed payments | Always inspect `Status` |
+| Re-sending PAY after a timeout | Risk of a duplicate payment *(inferred)* | Use the `Status` action with the original reference. A `Retry` action also exists ("retryable error or network interruption"), but Paynow does not specify when it is safe — confirm with support before using it |
+| Polling faster than specified | Fails UAT; extra biller load | 120s then 180s; 600s when `Flagged` |
+| Only polling on `BeingProcessed` | Test Biller `PP` returns `BeingPaid` and is used in UAT test 3 | Treat every non-final status as pending |
+| Calling unfiltered `ListBillers` regularly | Fails UAT; slow app | Cache locally, refresh filtered after a webhook |
+| Combining multiple receipts/SMS into one | Fails UAT; customer cannot redeem tokens | Deliver each entry individually |
+| Ignoring the config webhook | Prices drift; requests rejected | Implement the webhook and resync |
+| Sending `TotalAmount` when AUTH returned the balance | Likely rejection *(inferred)* | Leave `TotalAmount` and `Price` blank, as the official docs instruct |
+| Omitting `RequiresForexPayment` | Likely rejection *(inferred)* — it is a required acknowledgement | Set it explicitly on AUTH and PAY |
+| Partial `member/update` payload | Optional fields silently wiped | Always send the complete record |
+| Re-using a deleted member number | Not permitted | Use `undelete` instead |
+| Verifying HMAC over re-serialised JSON | Signature never matches | Hash the raw request body bytes |
+| Assuming `ReceiptHtml` always exists | Null reference in production | Test Biller always returns it; live billers may not — check first |
+| Assuming `ProductDepartment` is present | Legacy hash mismatch | Substitute an empty string |
+| Expecting JSON from `TargetStats` | Parse error | Empty body returned when not configured |
+| Reversal assumed available | Stuck refunds | Very few billers support it — have a manual refund path |
+
+---

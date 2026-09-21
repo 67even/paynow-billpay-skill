@@ -1,0 +1,125 @@
+// ---------------------------------------------------------------------------
+// Site-specific styling on top of just-the-docs.
+// Anything coloured here uses only the two logo colours or a mix of them.
+// ---------------------------------------------------------------------------
+
+$brand-red:   #ff3131;
+$brand-black: #0c0e0b;
+
+// --- sidebar logo ----------------------------------------------------------
+.site-logo {
+  // The logo is a red 6 over a white 7; it needs room to read at small sizes.
+  background-size: contain;
+  height: 3.2rem;
+  margin: 0.4rem 0;
+}
+
+// --- active navigation: a red rule rather than a heavy fill ----------------
+.nav-list .nav-list-item .nav-list-link.active {
+  color: $brand-red;
+  font-weight: 600;
+  background-image: none;
+  border-left: 3px solid $brand-red;
+  padding-left: calc(0.75rem - 3px);
+}
+
+// --- the header rule under the site title ---------------------------------
+.site-header {
+  border-bottom: 1px solid #333532;
+}
+
+// --- code: keep the red out of syntax, it fights with the accent -----------
+div.highlighter-rouge,
+figure.highlight,
+pre.highlight {
+  border: 1px solid #262825;
+  border-radius: 6px;
+}
+
+// --- tables read better with a little more air ----------------------------
+.main-content table {
+  th, td { padding: 0.55rem 0.7rem; }
+  th { background-color: #1b1c1a; }
+}
+
+// --- callouts -------------------------------------------------------------
+.warning { border-left-color: $brand-red; }
+
+// --- the landing hero ------------------------------------------------------
+.hero {
+  text-align: center;
+  padding: 1rem 0 0.25rem;
+
+  img.hero-mark {
+    width: 116px;
+    height: auto;
+    margin-bottom: 0.75rem;
+  }
+
+  // The logo is the 67even mark, not the product name, so the page still needs
+  // to say what it is - and every page needs exactly one h1.
+  .hero-title {
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.5rem;
+  }
+
+  .hero-tagline {
+    color: #a3a3a2;
+    font-size: 1.05rem;
+    max-width: 34rem;
+    margin: 0 auto 1rem;
+  }
+
+  .hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+
+    img { height: 20px; }
+  }
+}
+
+// --- the hero's call-to-action pair ---------------------------------------
+// kramdown wraps the two links in a <p> inside this div, so the centring has
+// to be text-align (the .btn is inline-block) rather than a flex rule on the
+// wrapper - flex would only centre the <p>, not the buttons inside it.
+.hero-actions {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  p { margin: 0; }
+
+  .btn {
+    margin: 0.25rem;
+    vertical-align: middle;
+  }
+}
+
+// --- the Paynow button replaces the theme credit in the nav footer ---------
+// One include feeds two places: the desktop sidebar footer and the mobile
+// page footer. Both are narrow, so the 200px artwork is scaled down.
+.paynow-mark {
+  display: block;
+  background-image: none !important;   // the nav footer underlines its links
+
+  // Paynow's own button artwork - shown at full strength rather than dimmed
+  // to match the theme, because it is somebody else's brand mark.
+  img {
+    width: 132px;
+    height: auto;
+  }
+}
+
+.site-footer .paynow-mark { margin-top: 0.25rem; }
+
+// --- red buttons need BLACK text: white on #FF3131 is only 3.66:1 ----------
+.btn-primary {
+  color: $brand-black !important;
+  font-weight: 600;
+
+  &:hover { background-color: #ff5050 !important; }
+}

@@ -1,0 +1,23 @@
+{
+  "skill_name": "paynow-billpay",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We're a registered agent with a prefunded Paynow BillPay wallet and I'm adding ZESA token and airtime purchases to our Laravel 11 app. Write the backend code for the buy flow (from validating the meter number to giving the customer their token) plus the endpoint Paynow calls when biller configs change. Put the files in the outputs folder with a short NOTES.md explaining how it fits together.",
+      "expected_output": "Laravel client/service/job/controller code implementing AUTH→confirm→charge→PAY, STATUS polling at 120/180/600s in a queued job treating BeingPaid/Pending as pending, never re-sending PAY, individual receipt/SMS delivery, filtered ListBillers on config webhook with fast 200.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "We just failed Paynow BillPay UAT and the Paynow guy mumbled something about polling and receipts. Here's our integration (billpay.js). Review it, list every problem in order of severity with the fix, and write a corrected version. Save review.md and billpay.fixed.js to the outputs folder.",
+      "expected_output": "Review identifying: charging before AUTH, new reference on PAY, re-sending PAY on error, 15s timeout, 30s polling with no 120s first wait / no Flagged handling / no cap, only BeingProcessed treated as pending (BeingPaid), merged SMS/receipts, unfiltered ListBillers in webhook and product page, webhook responding after work, TechnicalNarration shown to customers. Corrected code fixes them.",
+      "files": ["/home/claude/paynow-paybill-skills-workspace/files/billpay.js"]
+    },
+    {
+      "id": 3,
+      "prompt": "I run IT for a private school in Harare. We've been set up as an offline biller on Paynow BillPay so parents can pay fees through BillPay agents. I need (1) a Python Flask endpoint that receives BillPay's payment notifications, checks they are genuine and records them, and (2) a script that turns our student export (students.csv) into whatever BillPay's bulk member upload wants and uploads it. Save the code to the outputs folder.",
+      "expected_output": "Flask receiver verifying X-Signature as base64 HMAC-SHA256 of raw body with constant-time compare (legacy Hash optional with correct field order), idempotent store keyed on PaymentId; upload script mapping CSV to Member Number, Full Name, Email, Mobile, Postal Address (+Class as extra column) posted multipart to /api/member/uploadmembers with Basic auth, handling ResponseCode/Warnings/Errors.",
+      "files": ["/home/claude/paynow-paybill-skills-workspace/files/students.csv"]
+    }
+  ]
+}

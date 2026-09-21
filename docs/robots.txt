@@ -1,0 +1,32 @@
+---
+# WARNING: nothing reads this file at the moment, and that is not fixable here.
+#
+# Crawlers only ever read robots.txt at the DOMAIN root. This site is a GitHub
+# Pages *project* site, so it is served from a subdirectory and this file lands
+# at /paynow-integration-skill/robots.txt, which no crawler looks at. The one
+# that would count, https://67even.github.io/robots.txt, is owned by a
+# repository named 67even.github.io - it does not exist, so that URL 404s.
+#
+# A 404 there means "allow everything", which is what this file asks for anyway,
+# so nothing is being blocked. But do NOT add a Disallow rule here expecting it
+# to be enforced: it will not be. To get real robots.txt control, either create
+# a 67even.github.io repository and put it at that root, or point a custom
+# domain at this site - under a custom domain this file becomes the root one and
+# starts working as written.
+#
+# Sitemap discovery does not depend on this either: the sitemap is submitted
+# directly in Google Search Console.
+#
+# It is kept because it is correct the moment either of those happens, and it
+# replaces the bare Sitemap-only file jekyll-sitemap would otherwise generate at
+# the same dead path.
+layout: null
+sitemap: false
+---
+User-agent: *
+Allow: /
+
+# Generated Jekyll internals - nothing a searcher would want to land on.
+Disallow: /assets/js/search-data.json
+
+Sitemap: {{ site.url }}{{ site.baseurl }}/sitemap.xml

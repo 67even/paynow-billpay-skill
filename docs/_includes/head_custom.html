@@ -1,0 +1,160 @@
+{%- comment -%}
+  Everything here is ADDITIONAL to jekyll-seo-tag, which the theme's head.html
+  already renders. seo-tag owns <title>, the meta description, canonical, the
+  Open Graph and Twitter tags (including og:image, from each page's `image`
+  front matter) and a WebSite/WebPage JSON-LD block. This file adds the icons,
+  the crawler directives seo-tag does not emit, and the structured data types
+  Google still surfaces.
+
+  On structured data: Google retired FAQPage and HowTo rich results, so there
+  is deliberately no FAQPage markup on the troubleshooting page and no HowTo on
+  the integration guides - it would be markup that renders nothing. What is
+  here is what the Search gallery still lists: BreadcrumbList (shown in place
+  of the raw URL in the result) and Article, via its TechArticle subtype.
+  SoftwareSourceCode and Organization are not rich-result types; they are here
+  because they describe what this site IS, which is what entity matching and
+  AI answer engines read.
+{%- endcomment -%}
+
+{%- assign site_root = site.url | append: site.baseurl -%}
+{%- assign page_url = site_root | append: page.url -%}
+{%- assign og_card = '/assets/og/home.png' | relative_url | prepend: site.url -%}
+{%- if page.image.path -%}
+  {%- assign og_card = page.image.path | relative_url | prepend: site.url -%}
+{%- endif -%}
+{%- assign modified = page.last_modified_at | default: site.time | date_to_xmlschema -%}
+
+<link rel="icon" type="image/png" href="{{ '/assets/images/favicon.png' | relative_url }}">
+<link rel="apple-touch-icon" href="{{ '/assets/images/67even-logo.png' | relative_url }}">
+<meta name="theme-color" content="#0c0e0b">
+
+{%- comment -%}
+  max-image-preview:large is what lets Google show the OG card at full size
+  next to the result instead of a thumbnail; max-snippet:-1 lifts the cap on
+  snippet length. Neither is emitted by seo-tag.
+{%- endcomment -%}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1">
+
+{%- comment -%}
+  No author or article:modified_time here - seo-tag emits both once each page
+  carries a `date`, and a duplicated og/meta tag is worse than none.
+{%- endcomment -%}
+<meta property="og:image:type" content="image/png">
+<meta name="twitter:label1" content="Written by">
+<meta name="twitter:data1" content="{{ site.author.name }}">
+<meta name="twitter:label2" content="Covers">
+<meta name="twitter:data2" content="PHP, Laravel, Python, Node.js, C#">
+
+{%- comment -%} Breadcrumbs: Home > this page. {%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Paynow BillPay Skill",
+      "item": {{ site_root | append: '/' | jsonify }}
+    }{% unless page.url == "/" %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": {{ page.title | jsonify }}
+    }{% endunless %}
+  ]
+}
+</script>
+
+{%- if page.url == "/" %}
+{%- comment -%}
+  Search Console reads this only on the property URL it was given, which is
+  this page - so it lives here rather than on every page. It must stay put:
+  Google re-checks periodically and un-verifies the property if it disappears.
+{%- endcomment -%}
+{%- if site.google_site_verification_token %}
+<meta name="google-site-verification" content="{{ site.google_site_verification_token }}">
+{%- endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "@id": {{ site_root | append: '/#software' | jsonify }},
+  "name": "Paynow BillPay Skill",
+  "description": {{ site.description | strip_newlines | strip | jsonify }},
+  "codeRepository": "https://github.com/{{ site.repository }}",
+  "url": {{ site_root | append: '/' | jsonify }},
+  "image": {{ og_card | jsonify }},
+  "dateModified": {{ modified | jsonify }},
+  "programmingLanguage": ["PHP", "Python", "TypeScript", "C#"],
+  "runtimePlatform": ["Laravel", "Flask", "Node.js", "Express", ".NET"],
+  "license": "https://spdx.org/licenses/MIT.html",
+  "isAccessibleForFree": true,
+  "inLanguage": "en",
+  "author": {
+    "@type": "Person",
+    "name": {{ site.author.name | jsonify }},
+    "url": "https://github.com/johnmugabe"
+  },
+  "maintainer": { "@id": "https://github.com/67even#organization" },
+  "about": [
+    { "@type": "Thing", "name": "Paynow BillPay bill-payment and vending API" },
+    { "@type": "Thing", "name": "Utility, airtime and voucher vending in Zimbabwe" }
+  ],
+  "keywords": "Paynow BillPay, Paynow Zimbabwe, bill payments, ZESA tokens, ZETDC, airtime, EVD vouchers, vendor API, biller API, UAT, PHP, Laravel, Python, Node.js, C#, webhook HMAC"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://github.com/67even#organization",
+  "name": "67even",
+  "url": "https://github.com/67even",
+  "logo": {
+    "@type": "ImageObject",
+    "url": {{ '/assets/images/67even-logo.png' | relative_url | prepend: site.url | jsonify }},
+    "width": 512,
+    "height": 575
+  },
+  "sameAs": ["https://github.com/67even"]
+}
+</script>
+{%- else %}
+{%- comment -%}
+  TechArticle is an Article subtype, so it is covered by Google's Article
+  support. headline is capped at 110 characters by the spec; these titles are
+  nowhere near it, but the truncate guards a future long one.
+{%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": {{ page.title | truncate: 110, "" | jsonify }},
+  "description": {{ page.description | strip_newlines | strip | jsonify }},
+  "image": {{ og_card | jsonify }},
+  "datePublished": {{ page.date | date: "%Y-%m-%d" | jsonify }},
+  "dateModified": {{ modified | jsonify }},
+  "inLanguage": "en",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": {{ page_url | jsonify }}
+  },
+  "author": {
+    "@type": "Person",
+    "name": {{ site.author.name | jsonify }},
+    "url": "https://github.com/johnmugabe"
+  },
+  "publisher": { "@id": "https://github.com/67even#organization" },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": {{ site.title | jsonify }},
+    "url": {{ site_root | append: '/' | jsonify }}
+  },
+  "about": { "@type": "Thing", "name": "Paynow BillPay bill-payment and vending API" },
+  "proficiencyLevel": "Expert",
+  "dependencies": "Paynow BillPay API credentials (vendor API role or Biller Admin/User role)"
+}
+</script>
+{%- endif %}

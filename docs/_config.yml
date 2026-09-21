@@ -1,0 +1,99 @@
+# ---------------------------------------------------------------------------
+# https://67even.github.io/paynow-billpay-skill
+#
+# The content pages in this folder are GENERATED from
+# paynow-paybill-skills/paynow-billpay/references/ by tools/build_docs.py.
+# Edit the source files and re-run the generator - CI fails if they drift.
+# ---------------------------------------------------------------------------
+
+title: Paynow BillPay Skill
+description: >-
+  Integrate Paynow BillPay correctly in PHP/Laravel, Python, Node.js and C#.
+  ZESA tokens, airtime, EVD vouchers and bill payments - and pass Paynow's
+  go-live UAT the first time.
+
+url: https://67even.github.io
+baseurl: /paynow-billpay-skill
+repository: 67even/paynow-billpay-skill
+
+remote_theme: just-the-docs/just-the-docs@v0.12.0
+color_scheme: 67even
+logo: "/assets/images/67even-logo.png"
+
+author:
+  name: John Mugabe
+
+# --- Google Search Console --------------------------------------------------
+# Add this site as a property in Search Console, then paste its HTML-tag token
+# here. _includes/head_custom.html renders it on the entry page only.
+# google_site_verification_token: "<token>"   # empty strings are truthy in Liquid - leave commented until you have one
+
+# jekyll-seo-tag is rendered by the theme's head; sitemap needs no include.
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# --- search ----------------------------------------------------------------
+search_enabled: true
+search:
+  heading_level: 2
+  previews: 3
+  preview_words_before: 5
+  preview_words_after: 10
+  tokenizer_separator: /[\s/]+/
+  rel_url: true
+  button: false
+
+# --- links out to the repository -------------------------------------------
+aux_links:
+  "GitHub":
+    - "https://github.com/67even/paynow-billpay-skill"
+aux_links_new_tab: true
+
+nav_external_links:
+  - title: Repository on GitHub
+    url: https://github.com/67even/paynow-billpay-skill
+    hide_icon: false
+
+# --- "edit this page" straight into the SOURCE file, not the generated copy -
+gh_edit_link: false   # pages are generated; each one links to its own source instead
+gh_edit_link_text: "Edit the source of this page on GitHub"
+gh_edit_repository: "https://github.com/67even/paynow-billpay-skill"
+gh_edit_branch: "main"
+gh_edit_view_mode: "tree"
+
+back_to_top: true
+back_to_top_text: "Back to top"
+
+footer_content: >-
+  MIT licensed. Written and maintained by
+  <a href="https://github.com/johnmugabe">John Mugabe</a> under
+  <a href="https://github.com/67even">67even</a>. Independent and
+  community-maintained - not affiliated with or endorsed by Paynow Zimbabwe.
+
+# --- callouts --------------------------------------------------------------
+callouts_level: quiet
+callouts:
+  warning:
+    title: Warning
+    color: red
+  note:
+    title: Note
+    color: grey-dk
+
+# --- every page uses the theme's default layout -----------------------------
+# just-the-docs ships no _config.yml of its own and Jekyll does not merge theme
+# config, so without this every page would render as bare body content.
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+heading_anchors: true
+permalink: pretty
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/    # trailing slash: a bare "vendor" also excludes vendor-workflows.md
