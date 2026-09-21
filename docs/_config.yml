@@ -24,9 +24,8 @@ author:
   name: John Mugabe
 
 # --- Google Search Console --------------------------------------------------
-# Add this site as a property in Search Console, then paste its HTML-tag token
-# here. _includes/head_custom.html renders it on the entry page only.
-google_site_verification_token: "CF0JB6gTuZasg4wyXF_iek5BZfho1Yhl3bic-5DPtOw"
+# The verification <meta> tag is hard-coded in _includes/head_custom.html and
+# rendered on the entry page only. Keep it there, or the property un-verifies.
 
 # jekyll-seo-tag is rendered by the theme's head; sitemap needs no include.
 plugins:
