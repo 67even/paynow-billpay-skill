@@ -3,9 +3,8 @@ title: Home
 nav_order: 1
 permalink: /
 description: >-
-  Integrate Paynow BillPay correctly in PHP/Laravel, Python, Node.js and C#.
-  ZESA tokens, airtime, EVD vouchers and bill payments - and pass Paynow's
-  go-live UAT the first time.
+  Integrate Paynow BillPay in PHP/Laravel, Python, Node.js or C#: ZESA tokens,
+  airtime, EVD vouchers and bill payments. Pass Paynow's go-live UAT first time.
 last_modified_at: 2026-09-21
 image:
   path: /assets/og/home.png

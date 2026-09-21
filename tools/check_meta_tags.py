@@ -83,7 +83,7 @@ def check_pages(root):
                 bad.append("%s has no %s" % (rel, name))
         # A description Google will truncate is a wasted snippet.
         m = re.search(r'<meta name="description" content="([^"]*)"', head)
-        if m and len(m.group(1)) > 320:
+        if m and len(m.group(1)) > 160:
             bad.append("%s description is %d chars; Google shows about 160"
                        % (rel, len(m.group(1))))
     return bad, pages, seen
